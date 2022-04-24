@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zking.killgoods.mapper.SeckillGoodsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zking.killgoods.model.SeckillGoods">
+        <result column="id" property="id" />
+        <result column="goods_id" property="goodsId" />
+        <result column="seckill_price" property="seckillPrice" />
+        <result column="stock_count" property="stockCount" />
+        <result column="start_date" property="startDate" />
+        <result column="end_date" property="endDate" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id,
+        goods_id, seckill_price, stock_count, start_date, end_date
+    </sql>
+    <insert id="addSeckillGoods">
+        insert into t_seckill_goods(goods_id, seckill_price,
+                                    stock_count,
+                                    start_date, end_date)
+         values
+        <foreach collection="goods" item="g" separator=",">
+         (#{g.gid},#{g.goodsPrice},#{g.goodsStock},#{startDate},#{endDate})
+        </foreach>
+
+    </insert>
+    <select id="querySeckillGoods" resultType="com.zking.killgoods.vo.SeckillGoodsVo">
+        select
+            sg.id,
+            g.gid,
+            g.goods_name,
+            g.goods_price,
+            sg.seckill_price,
+            sg.stock_count,
+            sg.start_date,
+            sg.end_date
+        from
+            t_goods g,t_seckill_goods sg
+        where g.gid=sg.goods_id
+          <if test="null!=goodsName and ''!=goodsName">
+              and g.goods_name like concat('%',#{goodsName},'%')
+          </if>
+        order by sg.id desc
+    </select>
+    <select id="querySingleSeckillGoodsById" resultType="java.util.Map">
+        select
+        g.goods_img,g.goods_name,g.goods_title,g.goods_detail,
+        sg.seckill_price,sg.start_date,
+        sg.end_date,sg.stock_count,sg.id,g.gid,
+        (case when now()&lt;sg.start_date then 0 when now() between sg.start_date and sg.end_date then 1 when now()&gt;sg.end_date then 2 end) seckill_status
+        from t_goods g,t_seckill_goods sg
+        where g.gid=sg.goods_id
+        and sg.id=#{id}
+    </select>
+    <select id="querySeckillGoodsById" resultType="com.zking.killgoods.vo.SeckillGoodsVo">
+        select
+            g.goods_name,
+            g.goods_title,
+            g.goods_detail,
+            sg.seckill_price,
+            sg.stock_count,
+            sg.id,
+            sg.goods_id
+        from t_goods g,t_seckill_goods sg
+        where g.gid=sg.goods_id
+          and sg.id=#{id}
+    </select>
+
+</mapper>
